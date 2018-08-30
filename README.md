@@ -145,7 +145,7 @@ public class Item
     }
     
 }
-///////////////////////////////////
+//////////////////////////////
 import java.util.Random;
 /**
  * Write a description of class Player here.
@@ -293,9 +293,15 @@ public class Player
             levelUp();
         }
     }
+    public int attack(Enemy a)
+    {
+        double at = atk;
+        at = at*(100-a.getDef())/100;
+        return (int)at;
+    }
 }
 /////////////////////
- import java.util.Random;
+import java.util.Random;
 /**
  * Enemy Template
  *
@@ -527,14 +533,16 @@ public class Enemy
     {
         return xp;
     }
-    public void killCheat()
+    
+    public int attack(Player a, int d)
     {
-        alive = false;
+        double at = atk;
+        at = at*((100-d)/100);
+        return (int)at;
     }
     
-    
 }
-////////////////////////
+//////////////////////////
 import java.util.Random;
 import java.util.Scanner;
 import java.util.*;  
@@ -618,6 +626,11 @@ public class Main
                 //////////////////////////////////////////////////////////////////////////
                 
                 case "eat":
+                atk = one.getAtk();
+                def = one.getDef(); 
+                hp = one.getHp();
+                spd = one.getSpd();
+                luck = one.getSpd();
                 if (items.get(0) != null)
                 {
                     for (int i = 0; i < items.size()-1; i++)
@@ -628,11 +641,12 @@ public class Main
                         System.out.println();
                     }
                     System.out.println("If you wish to consume an item to recover your hp(no other stat can be increased at this time), type the corresponding number. If you don't want to eat anything, please enter 0.");
-                    if (Integer.parseInt(sc.nextLine())-1 == -1)
+                    int j = Integer.parseInt(sc.nextLine())-1;
+                    if (j == -1)
                     {
                         break;
                     }
-                    else if (items.get(Integer.parseInt(sc.nextLine())-1) == null)
+                    else if (items.get(j) == null)
                     {
                         System.out.println("Not an applicable item number");
                         System.out.println();
@@ -640,7 +654,12 @@ public class Main
                     }
                     else
                     {
-                        one.eat(items.get(Integer.parseInt(sc.nextLine())-1));
+                        one.eat(items.get(j));
+                        one.setAtk(atk);
+                        one.setDef(def);
+                        one.setSpd(spd);
+                        one.setLuck(luck);
+                        System.out.println("You recovered "+ items.get(j).getHp() + " Hp! You now have " +one.getHp() +"+ Hp!");
                         System.out.println();
                     }
                 }
@@ -653,20 +672,160 @@ public class Main
                 ///////////////////////////////////////////////////////////////////////
                 
                 case "woods":
+                boolean flee = false;
                 r = rand.nextInt(9) + 1;
                 l = rand.nextInt((one.getLv()+2) + one.getLv());
                 Enemy a = new Enemy(r , l);
                 System.out.println("You wander the woods, and a monster appears!");
                 System.out.println("You have encountered a "+a.getName());
                 System.out.println(a.getDesc());
-                while (one.getAlive() == true && a.getAlive() == true)
+                atk = one.getAtk();
+                def = one.getDef(); 
+                gold = one.getGold();
+                hp = (one.getLv()*10);
+                spd = one.getSpd();
+                luck = one.getSpd();
+                int dd = def*2;
+                boolean defend = false;
+                while (one.getAlive() == true && a.getAlive() == true && flee == false)
                 {
+                    System.out.println("Attack, Defend, Flee, or Eat?");
+                    dd = def*2;
                     if (one.getSpd() >= a.getSpd())
                     {
-                        
+                        switch (sc.nextLine())
+                        {
+                            case "Attack":
+                            int dmg1 = a.attack(one, dd);
+                            System.out.println("You attacked! You did "+dmg1+ " damage!");
+                            a.setHp(a.getHp()-dmg1);
+                            if (defend == true)
+                            {
+                                int dmg = a.attack(one, dd);
+                                System.out.println("The monster attacked! You took "+dmg+ " damage! You have "+(one.getHp()-dmg));
+                                one.setHp(one.getHp()-dmg);
+                                defend = false;
+                            }
+                            else
+                            {
+                                int dmg = a.attack(one, one.getDef());
+                                System.out.println("The monster attacked! You took "+dmg+ " damage! You have "+(one.getHp()-dmg));
+                                one.setHp(one.getHp()-dmg);
+                                defend = false;
+                            }
+                            break;
+                            
+                            case "Defend":
+                            System.out.println("You put up your guard!");
+                            defend = true;
+                             if (defend == true)
+                            {
+                                int dmg = a.attack(one, dd);
+                                System.out.println("The monster attacked! You took "+dmg+ " damage! You have "+(one.getHp()-dmg));
+                                one.setHp(one.getHp()-dmg);
+                                defend = false;
+                            }
+                            else
+                            {
+                                int dmg = a.attack(one, one.getDef());
+                                System.out.println("The monster attacked! You took "+dmg+ " damage! You have "+(one.getHp()-dmg));
+                                one.setHp(one.getHp()-dmg);
+                                defend = false;
+                            }
+                            break;
+                            
+                            case "Flee":
+                            int f = rand.nextInt(100) + 1;
+                            if (f < one.getLuck())
+                            {
+                                 System.out.println("You tried to run...but the monster caught you!");
+                                 if (defend == true)
+                                 {
+                                     int dmg = a.attack(one, dd);
+                                     System.out.println("The monster attacked! You took "+dmg+ " damage! You have "+(one.getHp()-dmg));
+                                     one.setHp(one.getHp()-dmg);
+                                     defend = false;
+                                 }
+                                 else
+                                 {
+                                     int dmg = a.attack(one, one.getDef());
+                                     System.out.println("The monster attacked! You took "+dmg+ " damage! You have "+(one.getHp()-dmg));
+                                     one.setHp(one.getHp()-dmg);
+                                     defend = false;
+                                 }
+                            }
+                            else
+                            {
+                                 System.out.println("You got away!");
+                                 flee = true;
+                            }
+                            
+                            case "Eat":
+                            if (items.get(0) != null)
+                            {
+                              for (int i = 0; i < items.size()-1; i++)
+                              {
+                                  System.out.println(items.get(i).getName());
+                                  System.out.println(items.get(i).getDesc());
+                                  System.out.println(items.get(i).getStats());
+                                  System.out.println();
+                              }
+                              System.out.println("If you wish to consume an item, type the corresponding number. If you don't want to eat anything, please enter 0.");
+                              int j = Integer.parseInt(sc.nextLine())-1;
+                              if (j == -1)
+                              {
+                                  break;
+                              }
+                              else if (items.get(j) == null)
+                              {
+                                  System.out.println("Not an applicable item number");
+                                  System.out.println();
+                                  break;
+                              }
+                              else
+                              {
+                                  one.eat(items.get(j));
+                                  System.out.println("Hp: "+one.getHp()+ "Atk: "+one.getAtk()+ "Def: "+ one.getDef() + "Speed: " + one.getSpd() + "Luck: " + one.getLuck() + ".");
+                                  System.out.println();
+                                  break;
+                              }
+                            }
+                            else
+                            {
+                              System.out.println("No items in your inventory");
+                              System.out.println();
+                            }
+                            if (defend == true)
+                            {
+                                int dmg = a.attack(one, dd);
+                                System.out.println("The monster attacked! You took "+dmg+ " damage! You have "+(one.getHp()-dmg));
+                                one.setHp(one.getHp()-dmg);
+                                defend = false;
+                            }
+                            else
+                            {
+                                int dmg = a.attack(one, one.getDef());
+                                System.out.println("The monster attacked! You took "+dmg+ " damage! You have "+(one.getHp()-dmg));
+                                one.setHp(one.getHp()-dmg);
+                                defend = false;
+                            }
+                            break;
+                            
+                            case "killCheat":
+                            a.death();
+                            break;
+                            
+                            default: 
+                            System.out.println("You cannot do that at this time!");
+                            break;
+                        }
                     }
                 }
-                
+                if (one.getAlive() == true)
+                {
+                    
+                    
+                }
                 case "dragon":
                 
                 case "levelCheat":
@@ -690,5 +849,4 @@ public class Main
         System.out.println("Where's your pizza? NOBODY KNOWS. I BLAME THE MARTIANS AND LIZARD PEOPLE IN THE WHITE HOUSE!");
         
     }
-    
 }
